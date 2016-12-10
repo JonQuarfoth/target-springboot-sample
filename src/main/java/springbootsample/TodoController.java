@@ -53,7 +53,7 @@ public class TodoController {
     @RequestMapping(method = RequestMethod.DELETE, value = "/todos/{id}")
     public ResponseEntity delete(@PathVariable Long id) {
         try {
-            Todo deleted = todoService.delete(id);
+            todoService.delete(id);
             return ResponseEntity.status(HttpStatus.OK).build();
         } catch (ResourceDoesNotExistException rdnee) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(rdnee.getMessage());

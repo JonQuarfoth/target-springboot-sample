@@ -16,7 +16,11 @@ public class TodoService {
     }
 
     public Optional<Todo> get(Long id) {
-        return Optional.ofNullable(todos.get(id));
+        Todo todo = todos.get(id);
+        if (todo != null) {
+            return Optional.of(new Todo(todo.getId(), todo.getTask(), todo.isComplete()));
+        }
+        return Optional.empty();
     }
 
     public Todo create(Todo todo) {
@@ -28,9 +32,11 @@ public class TodoService {
 
     public Todo update(Todo todo) {
         Long id = todo.getId();
-        Todo previous = todos.get(id);
-        if (previous != null) {
-            todos.put(id, todo);
+        Optional<Todo> previous = get(id);
+        if (previous.isPresent()) {
+            todo.setTask(todo.getTask());
+            todo.setComplete(todo.isComplete());
+            todos.put(todo.getId(), todo);
             return todo;
         }
         throw new ResourceDoesNotExistException("No todo found for id " + id);
