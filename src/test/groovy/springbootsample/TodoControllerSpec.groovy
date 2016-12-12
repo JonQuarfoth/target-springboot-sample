@@ -23,13 +23,25 @@ class TodoControllerSpec extends Specification {
         defaultTodoList = [todo1, todo2, todo3]
     }
 
-    def "should return todos on list()"() {
+    def "should call through to list on list() without query"() {
 
         when:
-        List<Todo> todos = todoController.list()
+        List<Todo> todos = todoController.list(null)
 
         then:
         1 * todoService.list() >> defaultTodoList
+        todos == defaultTodoList
+    }
+
+    def "should call through to search() on list() with query"() {
+        given:
+        String query = 'search query'
+
+        when:
+        List<Todo> todos = todoController.list(query)
+
+        then:
+        1 * todoService.search(query) >> defaultTodoList
         todos == defaultTodoList
     }
 
@@ -122,7 +134,7 @@ class TodoControllerSpec extends Specification {
         ResponseEntity result = todoController.delete(1L)
 
         then:
-        1 * todoService.delete(1L) >> new Todo(id: 1L)
+        1 * todoService.delete(1L)
         result.statusCode == HttpStatus.OK
     }
 

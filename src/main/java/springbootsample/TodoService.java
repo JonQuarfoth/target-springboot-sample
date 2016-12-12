@@ -2,50 +2,67 @@ package springbootsample;
 
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Service
 public class TodoService {
 
     private final AtomicLong ids = new AtomicLong(1L);
-    private final Map<Long, Todo> todos = new HashMap<>();
+    private final List<Todo> todos = new CopyOnWriteArrayList<>();
 
     public List<Todo> list() {
-        return new ArrayList<>(todos.values());
+        return todos.stream()
+                .map(Todo::copy)
+                .collect(Collectors.toList());
+    }
+
+    public List<Todo> search(String search) {
+        return todos.stream()
+                .filter(t -> t.getTask().contains(search))
+                .map(Todo::copy)
+                .collect(Collectors.toList());
     }
 
     public Optional<Todo> get(Long id) {
-        Todo todo = todos.get(id);
-        if (todo != null) {
-            return Optional.of(new Todo(todo.getId(), todo.getTask(), todo.isComplete()));
-        }
-        return Optional.empty();
+        return todos.stream()
+                .filter(t -> t.getId().equals(id))
+                .map(Todo::copy)
+                .findFirst();
     }
 
     public Todo create(Todo todo) {
         Long id = ids.getAndIncrement();
         todo.setId(id);
-        todos.put(id, todo);
+        todos.add(todo);
         return todo;
     }
 
-    public Todo update(Todo todo) {
-        Long id = todo.getId();
-        Optional<Todo> previous = get(id);
-        if (previous.isPresent()) {
-            todo.setTask(todo.getTask());
-            todo.setComplete(todo.isComplete());
-            todos.put(todo.getId(), todo);
-            return todo;
+    public Todo update(Todo updatedTodo) {
+        Optional<Todo> match = todos.stream()
+                .filter(updatedTodo::testIdMatch)
+                .findFirst();
+        if (match.isPresent()) {
+            Todo existingTodo = match.get();
+            existingTodo.setTask(updatedTodo.getTask());
+            existingTodo.setComplete(updatedTodo.isComplete());
+            return Todo.copy(existingTodo);
         }
-        throw new ResourceDoesNotExistException("No todo found for id " + id);
+        throw new ResourceDoesNotExistException("No todo found for id " + updatedTodo.getId());
     }
 
-    public Todo delete(Long id) {
-        if (todos.containsKey(id)) {
-            return todos.remove(id);
+    public void delete(Long id) {
+        Collection<Todo> matches = todos.stream()
+                .filter( t -> t.getId().equals(id))
+                .collect(Collectors.toSet());
+        if (!matches.isEmpty()) {
+            todos.removeAll(matches);
+        } else {
+            throw new ResourceDoesNotExistException("No todo found for id " + id);
         }
-        throw new ResourceDoesNotExistException("No todo found for id " + id);
     }
 }

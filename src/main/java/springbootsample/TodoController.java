@@ -19,7 +19,10 @@ public class TodoController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/todos")
-    public List<Todo> list() {
+    public List<Todo> list(@RequestParam(required = false) String query) {
+        if (query != null && !query.trim().isEmpty()) {
+            return todoService.search(query.trim());
+        }
         return todoService.list();
     }
 

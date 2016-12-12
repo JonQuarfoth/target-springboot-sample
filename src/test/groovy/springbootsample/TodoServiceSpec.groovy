@@ -86,12 +86,13 @@ class TodoServiceSpec extends Specification {
         Todo updateResult = todoService.update(updateTodo)
 
         and:
-        Todo getResult = todoService.get(updateResult.id).get()
+        Optional<Todo> getResult = todoService.get(updateResult.id)
 
         then:
-        !todo.isComplete()
         updateResult.isComplete()
-        getResult.isComplete()
+
+        getResult.isPresent()
+        getResult.get().isComplete()
     }
 
     def "update() throws exception if there is no matching Todo"() {
@@ -108,8 +109,13 @@ class TodoServiceSpec extends Specification {
 
     def "delete() should delete the todo"() {
         given:
-        Todo todo = new Todo(id: 1L, task: 'find time travel device', complete: false)
-        todoService.create(todo)
+        Todo todo = new Todo(task: 'find time travel device', complete: false)
+
+        when:
+        todo = todoService.create(todo)
+
+        then:
+        todoService.get(todo.id).isPresent()
 
         when:
         todoService.delete(todo.id)
@@ -124,5 +130,32 @@ class TodoServiceSpec extends Specification {
 
         then:
         thrown(ResourceDoesNotExistException)
+    }
+
+    @Unroll
+    def "search() for '#searchString' finds #resultCount results"() {
+        given:
+        todoService.create(new Todo(task: 'recruit evil henchman', complete: true))
+        todoService.create(new Todo(task: 'find suitable site for evil volcano lair', complete: true))
+        todoService.create(new Todo(task: 'build evil volcano lair ', complete: true))
+        todoService.create(new Todo(task: 'capture secret agent before he foils plans', complete: true))
+        todoService.create(new Todo(task: 'reveal plans to secret agent', complete: true))
+        todoService.create(new Todo(task: 'ensure secret agent does not escape', complete: false))
+        todoService.create(new Todo(task: 'conquer planet', complete: false))
+
+        when:
+        List<Todo> results = todoService.search(searchString)
+
+        then:
+        results.size() == resultCount
+
+        where:
+        searchString   || resultCount
+        'evil'         || 3
+        'good'         || 0
+        'henchman'     || 1
+        'volcano lair' || 2
+        'secret agent' || 3
+
     }
 }

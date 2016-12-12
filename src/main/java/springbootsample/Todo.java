@@ -1,5 +1,7 @@
 package springbootsample;
 
+import java.util.function.Function;
+
 public class Todo {
 
     private Long id;
@@ -15,6 +17,14 @@ public class Todo {
         this.id = id;
         this.task = task;
         this.complete = complete;
+    }
+
+    public static Todo copy(Todo todo) {
+        return new Todo(todo.getId(), todo.getTask(), todo.isComplete());
+    }
+
+    public boolean testIdMatch(Todo todo) {
+        return id != null && id.equals(todo.getId());
     }
 
     public void setId(Long id) {
@@ -39,5 +49,14 @@ public class Todo {
 
     public void setComplete(boolean complete) {
         this.complete = complete;
+    }
+
+    @Override
+    public String toString() {
+        return "Todo{" +
+                "id=" + id +
+                ", task='" + task + '\'' +
+                ", complete=" + complete +
+                '}';
     }
 }
