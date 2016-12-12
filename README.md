@@ -7,6 +7,32 @@ Sample Spring Boot Rest app for Target Interview
 * Knowledge of Spock Testing Framework
 * Build application as Docker container via Gradle
 
+### Application
+This is a tiny Spring Boot Application which manages a Todo list. Requests and responses are expected to be JSON.
+
+#### Endpoints
+* POST    /todos : create a todo item
+* GET     /todos : List all items in the todo lists
+* GET     /todos?query=text : list all items with tasks containing the given search term
+* PUT     /todos/{id} : update an existing todo item
+* GET     /todos/{id} : get an existing todo item
+* DELETE  /todos/{id} : delete an existing todo item
+
+Example JSON:
+```
+{
+"id" : 1,
+"task" : "Watch Star Wars",
+"complete" : "true"
+}
+```
+
+### To Run app
+`gradle bootRun`
+
+### To Run Spock Tests
+`gradle test`
+
 ### To build docker image:
 `gradle build buildDocker`
 
