@@ -21,9 +21,9 @@ This is a tiny Spring Boot Application which manages a Todo list. Requests and r
 Example JSON:
 ```
 {
-"id" : 1,
-"task" : "Watch Star Wars",
-"complete" : "true"
+  "id" : 1,
+  "task" : "Watch Star Wars",
+  "complete" : "true"
 }
 ```
 
@@ -42,6 +42,6 @@ The Docker image built by this command is available here:
 https://hub.docker.com/r/jonquarfoth/springboot-sample/
 
 ### To run docker image
-docker run -p 8080:8080 -t jonquarfoth/springboot-sample:latest
+`docker run -p 8080:8080 -t jonquarfoth/springboot-sample:latest`
 
 This should start up the application listening on port 8080
