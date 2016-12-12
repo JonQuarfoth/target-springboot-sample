@@ -26,7 +26,7 @@ class TodoControllerSpec extends Specification {
     def "should call through to list on list() without query"() {
 
         when:
-        List<Todo> todos = todoController.list(null)
+        List<Todo> todos = todoController.list(Optional.empty())
 
         then:
         1 * todoService.list() >> defaultTodoList
@@ -38,7 +38,7 @@ class TodoControllerSpec extends Specification {
         String query = 'search query'
 
         when:
-        List<Todo> todos = todoController.list(query)
+        List<Todo> todos = todoController.list(Optional.of(query))
 
         then:
         1 * todoService.search(query) >> defaultTodoList
@@ -82,7 +82,7 @@ class TodoControllerSpec extends Specification {
         Todo todoOut = new Todo(id: 1L)
 
         when:
-        ResponseEntity result = todoController.update(todoIn, todoIn.id)
+        ResponseEntity result = todoController.update(todoIn, Optional.of(todoIn.id))
 
         then:
         1 * todoService.update(todoIn) >> todoOut
@@ -97,12 +97,44 @@ class TodoControllerSpec extends Specification {
         String errorMessage = 'error message!'
 
         when:
-        ResponseEntity result = todoController.update(todo, todo.id)
+        ResponseEntity result = todoController.update(todo, Optional.of(todo.id))
 
         then:
         1 * todoService.update(todo) >> { throw new ResourceDoesNotExistException(errorMessage) }
         result.statusCode == HttpStatus.NOT_FOUND
         result.body == errorMessage
+    }
+
+    def "controller update() should use path id if no todo id is set"() {
+
+        given:
+        Todo todo = new Todo()
+
+        when:
+        ResponseEntity result = todoController.update(todo, Optional.of(1L))
+
+        then:
+        todo.id == 1L
+
+        and:
+        1 * todoService.update(todo)
+        result.statusCode == HttpStatus.OK
+    }
+
+    def "controller update() should use todo id if no path id is provided"() {
+
+        given:
+        Todo todo = new Todo(id: 1L)
+
+        when:
+        ResponseEntity result = todoController.update(todo, Optional.empty())
+
+        then:
+        todo.id == 1L
+
+        and:
+        1 * todoService.update(todo)
+        result.statusCode == HttpStatus.OK
     }
 
     def "controller update() should error if path id and body id do not match"() {
@@ -111,7 +143,20 @@ class TodoControllerSpec extends Specification {
         Todo todo = new Todo(id: 1L)
 
         when:
-        ResponseEntity result = todoController.update(todo, 2L)
+        ResponseEntity result = todoController.update(todo, Optional.of(2L))
+
+        then:
+        0 * todoService.update(todo)
+        result.statusCode == HttpStatus.BAD_REQUEST
+    }
+
+    def "controller update() should error if no path id or todo id is provided"() {
+
+        given:
+        Todo todo = new Todo()
+
+        when:
+        ResponseEntity result = todoController.update(todo, Optional.empty())
 
         then:
         0 * todoService.update(todo)

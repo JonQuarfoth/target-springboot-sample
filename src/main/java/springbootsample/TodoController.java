@@ -19,9 +19,9 @@ public class TodoController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/todos")
-    public List<Todo> list(@RequestParam(required = false) String query) {
-        if (query != null && !query.trim().isEmpty()) {
-            return todoService.search(query.trim());
+    public List<Todo> list(@RequestParam(required = false) Optional<String> query) {
+        if (query.isPresent()) {
+            return todoService.search(query.get().trim());
         }
         return todoService.list();
     }
@@ -34,13 +34,20 @@ public class TodoController {
         return ResponseEntity.ok(todoService.create(todo));
     }
 
-    @RequestMapping(method = RequestMethod.PUT, value = "/todos/{id}")
-    public ResponseEntity update(@RequestBody Todo todo, @PathVariable Long id) {
-        if (todo != null && !todo.getId().equals(id)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("path id did not match todo id");
-        }
-        try {
+    @RequestMapping(method = RequestMethod.PUT, value = {"/todos", "/todos/{id}"})
+    public ResponseEntity update(@RequestBody Todo todo, @PathVariable(name = "id") Optional<Long> pathId) {
+
+        if (pathId.isPresent()) {
+            Long id = pathId.get();
+            if (todo.getId() != null && !todo.getId().equals(id)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("todo id must match path id if both are set");
+            }
             todo.setId(id);
+        } else if (todo.getId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("id must be specified");
+        }
+
+        try {
             Todo updated = todoService.update(todo);
             return ResponseEntity.ok(updated);
         } catch (ResourceDoesNotExistException rdnee) {
