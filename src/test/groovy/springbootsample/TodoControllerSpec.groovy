@@ -78,11 +78,11 @@ class TodoControllerSpec extends Specification {
     def "controller update() should send todo to service update() "() {
 
         given:
-        Todo todoIn = new Todo()
-        Todo todoOut = new Todo()
+        Todo todoIn = new Todo(id: 1L)
+        Todo todoOut = new Todo(id: 1L)
 
         when:
-        ResponseEntity result = todoController.update(todoIn)
+        ResponseEntity result = todoController.update(todoIn, todoIn.id)
 
         then:
         1 * todoService.update(todoIn) >> todoOut
@@ -93,16 +93,29 @@ class TodoControllerSpec extends Specification {
     def "controller update() should send todo to service update() and return 404 on ResourceDoesNotExistException"() {
 
         given:
-        Todo todo = new Todo()
+        Todo todo = new Todo(id: 1L)
         String errorMessage = 'error message!'
 
         when:
-        ResponseEntity result = todoController.update(todo)
+        ResponseEntity result = todoController.update(todo, todo.id)
 
         then:
         1 * todoService.update(todo) >> { throw new ResourceDoesNotExistException(errorMessage) }
         result.statusCode == HttpStatus.NOT_FOUND
         result.body == errorMessage
+    }
+
+    def "controller update() should error if path id and body id do not match"() {
+
+        given:
+        Todo todo = new Todo(id: 1L)
+
+        when:
+        ResponseEntity result = todoController.update(todo, 2L)
+
+        then:
+        0 * todoService.update(todo)
+        result.statusCode == HttpStatus.BAD_REQUEST
     }
 
     def "get() should return todo from service"() {

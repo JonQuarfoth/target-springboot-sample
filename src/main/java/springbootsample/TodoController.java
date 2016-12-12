@@ -34,9 +34,13 @@ public class TodoController {
         return ResponseEntity.ok(todoService.create(todo));
     }
 
-    @RequestMapping(method = RequestMethod.PUT, value = "/todos")
-    public ResponseEntity update(@RequestBody Todo todo) {
+    @RequestMapping(method = RequestMethod.PUT, value = "/todos/{id}")
+    public ResponseEntity update(@RequestBody Todo todo, @PathVariable Long id) {
+        if (todo != null && !todo.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("path id did not match todo id");
+        }
         try {
+            todo.setId(id);
             Todo updated = todoService.update(todo);
             return ResponseEntity.ok(updated);
         } catch (ResourceDoesNotExistException rdnee) {
